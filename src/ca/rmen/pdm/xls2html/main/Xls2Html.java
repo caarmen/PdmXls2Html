@@ -47,7 +47,7 @@ import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
 
-public class XLSToHTML {
+public class Xls2Html {
     private final static String[] MONTHS = new String[] { "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre",
             "noviembre", "diciembre" };
 
