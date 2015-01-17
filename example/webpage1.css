@@ -1,30 +1,14 @@
 html {
-  color: #CD5;
   background-color: #689;
-  background-image: url("seleccionlectores1bk.png");
 }
-a:link,a.active:link, a:hover, a:visited {
- color: #CD5;
+html, a:link,a.active:link, a:hover, a:visited {
+  color: #CD5;
 }
-h1 {
+h1, .slogan, .title, .subtitle, .index-heading {
   color: #EEC;
 }
-.slogan {
-  color: #EEC;
-}
-.author {
+.author, .fineprint {
   color: #AAA;
-}
-.title, .subtitle {
-  color: #EEC;
-}
-.painting {
-  width: 500px;
-  height: 333px;
-}
-.painting img {
-  width: 480px;
-  height: 313px;
 }
 .caption {
   color: #CCC;
@@ -32,24 +16,9 @@ h1 {
 .container {
   background-color: #356;
 }
-.left-border, .right-border {
-  background: #CC8;
-  background: linear-gradient(0deg, #CC8, #FFF, #CC8) repeat fixed 0% 0% transparent;
-}
-.index-heading {
-  color: #EEC;
-}
-.poem a:link,.poem a.active:link, .poem a:hover, .poem a:visited {
- color: #880;
-}
-.poem-divider {
-  width: 160px;
-  height: 64px;
-  background-image: url("divider.png");
+.poem, .poem a:link,.poem a.active:link, .poem a:hover, .poem a:visited {
+  color: #880;
 }
 .nav-prev {
   display:none;
-}
-.fineprint {
-  color: #AAA;
 }

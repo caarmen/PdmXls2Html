@@ -6,7 +6,7 @@
   <link rel="stylesheet" type="text/css" href="webpage${webpage.pageNumber}.css">
   <title>Selección de los lectores N°${webpage.pageNumber}</title>
  </head>
- <body>
+ <body style="background-image: url(background${webpage.pageNumber}.png)">
   <bgsound src="musica${webpage.pageNumber}.mid" loop="infinite"/>
   <div class="container">
    <div class="left-border"></div>
@@ -36,7 +36,9 @@ de
      <a href="#${poem.id}">${poem.title}</a>
     </#list>
    </div>
-   <div class="poem-divider"></div>
+   <div class="poem-divider">
+    <img src= "divider${webpage.pageNumber}.png">
+   </div>
    <div class="poems">
     <h1 id="breverias">Breverías</h1>
      <div class="poem breveria">
@@ -64,7 +66,9 @@ de
       <div class="link-to-index"><a href="#index">Índice</a></div>
      </div>
      <#if poem_has_next>
-     <div class="poem-divider"></div>
+     <div class="poem-divider">
+      <img src= "divider${webpage.pageNumber}.png">
+     </div>
      </#if>
     </#list>
     <h1>Otros</h1>
@@ -79,7 +83,9 @@ de
        <div class="link-to-index"><a href="#index">Índice</a></div>
       </div>
       <#if poem_has_next>
-      <div class="poem-divider"></div>
+      <div class="poem-divider">
+       <img src= "divider${webpage.pageNumber}.png">
+      </div>
       </#if>
      </#if>
     </#list>
