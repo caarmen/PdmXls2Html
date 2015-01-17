@@ -127,19 +127,9 @@ public class XLSToHTML {
         Sheet poemSheet = wb.getSheet("poem");
         List<String> columnNames = readColumnNames(poemSheet);
 
-        int columnCount = poemSheet.getColumns();
         int rowCount = poemSheet.getRows();
-        Map<String, String> values = new HashMap<String, String>();
         for (int r = 1; r < rowCount; r++) {
-            Cell[] row = poemSheet.getRow(r);
-            for (int c = 0; c < columnCount; c++) {
-                String columnName = columnNames.get(c);
-                if (columnName.startsWith("#"))
-                    continue;
-                String cellData = row[c].getContents();
-                cellData = clean(cellData);
-                values.put(columnName, cellData);
-            }
+            Map<String, String> values = readRow(poemSheet, r, columnNames);
             String title = values.get(Poem.Column.TITLE.name());
             System.out.println(title);
             String poemTypeName = values.get(Poem.Column.POEM_TYPE.name());
