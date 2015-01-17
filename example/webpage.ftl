@@ -2,12 +2,15 @@
 <html>
  <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=610px">
   <link rel="stylesheet" type="text/css" href="common.css">
   <link rel="stylesheet" type="text/css" href="webpage${webpage.pageNumber}.css">
   <title>Selección de los lectores N°${webpage.pageNumber}</title>
  </head>
  <body style="background-image: url(background${webpage.pageNumber}.png)">
+  <#if webpage.songTitle??>
   <bgsound src="musica${webpage.pageNumber}.mid" loop="infinite"/>
+  </#if>
   <div class="container">
    <div class="left-border"></div>
    <div class="right-border"></div>
@@ -27,10 +30,12 @@ de
    <div id="index" class="index">
     <h1>Índice</h1>
     <div class="index-heading"><a href="#breverias">Breverías</a></div>
+
     <div class="index-heading">Sonetos:</div>
     <#list webpage.sonnets as poem>
      <a href="#${poem.id}">${poem.title}</a>
     </#list>
+
     <div class="index-heading">Otros poemas:</div>
     <#list webpage.others as poem>
      <a href="#${poem.id}">${poem.title}</a>
@@ -100,7 +105,11 @@ de
     <!--#include virtual="/enlaces/cajita-utf8.html"-->
    </div>
    <div class="fineprint">
+   <#if webpage.songTitle??>
    Música: ${webpage.songTitle}. Fuente: <a href="${webpage.songLink}">Mutopia</a>.
+   <br>
+   </#if>
+   Poemas &copy; Francisco Álvarez Hidalgo, Familia Álvarez, 1997-2014. <a href="/enlacesindice.html#derechos">Todos derechos reservados.</a>
    </div>
   </div>
  </body>

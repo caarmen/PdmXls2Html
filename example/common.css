@@ -4,6 +4,7 @@ html {
 body {
   margin: 0px;
   padding: 0px;
+  background-attachment: fixed;
 }
 .logo img {
   border: 0px;
@@ -42,7 +43,7 @@ h1 {
   margin-right: auto;
   padding-top: 10px;
   padding-bottom: 10px;
-  background-color:#AAC;
+  background-color:#CC8;
   background: linear-gradient(90deg, #CC8, #FFF, #CC8);
   box-shadow: 2px 2px 5px #333;
   border: 1px solid #430;
@@ -66,13 +67,18 @@ h1 {
   margin-left: auto;
   margin-right: auto;
   position: relative;
+  box-shadow: 0px 2px 15px #000;
 }
 .left-border {
-  box-shadow: 5px 0px 2px #333;
+  box-shadow: 1px 0px 12px #000;
+  border-left: 6px solid #BA6;
+  border-right: 3px solid #AA6;
 }
 .right-border {
-  left:595px;
-  box-shadow: -5px 0px 2px #333;
+  left:586px;
+  box-shadow: -1px 0px 12px #000;
+  border-left: 3px solid #AA6;
+  border-right: 6px solid #BA6;
 }
 .left-border, .right-border {
   position: absolute;
@@ -88,6 +94,8 @@ h1 {
 }
 .index-heading {
   font-style:italic;
+  font-weight:bold;
+  display:inline;
 }
 .link-to-index {
   font-style:italic;
@@ -164,12 +172,12 @@ div.nav div:hover {
 .nav-prev {
   top: 0px;
   position: absolute;
-  left: 15px;
+  left: 20px;
 }
 .nav-next {
   top: 0px;
   position: absolute;
-  left: 415px;
+  left: 410px;
 }
 
 .footer {
