@@ -53,16 +53,24 @@ public class Xls2Html {
 
     public static void main(String[] args) throws Throwable {
         int i = 0;
+        if(args.length != 2) {
+            System.err.println("Usage: Xls2Html <Excel file> <template file>");
+            System.err.println("This program will generate a set of HTML files in the same folder as the template file");
+            System.exit(1);;
+        }
         String excelPath = args[i++];
         String templatePath = args[i++];
-        List<Webpage> documents = readFile(excelPath);
+        List<Webpage> documents = readExcelFile(excelPath);
         for (Webpage webpage : documents) {
             String htmlPath = templatePath.replaceAll(".ftl$", webpage.getPageNumber() + ".html");
             writeWebpage(webpage, templatePath, htmlPath);
         }
     }
 
-    private static List<Webpage> readFile(String filePath) {
+    /**
+     * Read the Excel file and return a list of Webpages which we can transform into HTML files.
+     */
+    private static List<Webpage> readExcelFile(String filePath) {
         try {
             InputStream is = new FileInputStream(filePath);
             WorkbookSettings wbSettings = new WorkbookSettings();
@@ -76,6 +84,9 @@ public class Xls2Html {
         }
     }
 
+    /**
+     * Read the first row in an Excel sheet and return the list of cell values.
+     */
     private static List<String> readColumnNames(Sheet sheet) {
         Cell[] headerRow = sheet.getRow(0);
         List<String> columnNames = new ArrayList<String>();
@@ -84,6 +95,9 @@ public class Xls2Html {
         return columnNames;
     }
 
+    /**
+     * Read one row in the given Excel sheet, and return a map of the column names to the cell values in this row.
+     */
     private static Map<String, String> readRow(Sheet sheet, int rowId, List<String> columnNames) {
         Map<String, String> values = new HashMap<String, String>();
         int columnCount = sheet.getColumns();
@@ -99,6 +113,9 @@ public class Xls2Html {
         return values;
     }
 
+    /**
+     * Read the "page" sheet in the Excel file which contains the data about each page (excluding the poem content).
+     */
     private static Map<Integer, Webpage> readPageMeta(Workbook wb) {
         Map<Integer, Webpage> result = new HashMap<Integer, Webpage>();
         Sheet pageSheet = wb.getSheet("page");
@@ -121,6 +138,9 @@ public class Xls2Html {
         return result;
     }
 
+    /**
+     * Read the page and poem sheets of an Excel workbook, and return the list of Webpages which are ready to be given to freemarket to generate HTML files.
+     */
     private static List<Webpage> readBook(Workbook wb) {
         Map<Integer, Webpage> documents = readPageMeta(wb);
 
@@ -159,7 +179,6 @@ public class Xls2Html {
                 webpage.addOtherPoem(new Poem(title, null, poemNumber, preContent, content, locationDate));
                 break;
             }
-
         }
 
         final List<Webpage> result = new ArrayList<Webpage>();
@@ -170,6 +189,9 @@ public class Xls2Html {
         return result;
     }
 
+    /**
+     * Create one HTML file for the given Webpage.  
+     */
     private static void writeWebpage(Webpage webpage, String inputTemplatePath, String outputHTMLPath) throws Throwable {
         Map<String, Object> root = new HashMap<String, Object>();
         root.put("webpage", webpage);
@@ -184,6 +206,9 @@ public class Xls2Html {
         writer.close();
     }
 
+    /**
+     * Fix whitespace in the given string.
+     */
     private static String clean(String data) {
         if (data == null)
             return data;
