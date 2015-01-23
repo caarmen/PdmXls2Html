@@ -27,7 +27,7 @@ import java.text.Normalizer;
 
 public class Poem {
     public enum Column {
-        TITLE, POEM_TYPE, POEM_NUMBER, PRE_CONTENT, CONTENT, LOCATION, YEAR, MONTH, DAY, PAGE_NUMBER
+        TITLE, POEM_TYPE, POEM_NUMBER, PRE_CONTENT, CONTENT, LOCATION, YEAR, MONTH, DAY, PAGE_NUMBER, LINK
 
     }
 
@@ -41,14 +41,16 @@ public class Poem {
     private final String preContent;
     private final String content;
     private final String locationDate;
+    private final String originalLink;
 
-    public Poem(String title, String poemType, String poemNumber, String preContent, String content, String locationDate) {
+    public Poem(String title, String poemType, String poemNumber, String preContent, String content, String locationDate, String originalLink) {
         this.title = title;
         this.poemType = poemType;
         this.poemNumber = poemNumber;
         this.preContent = preContent;
         this.content = content;
         this.locationDate = locationDate;
+        this.originalLink = originalLink;
     }
 
     public String getTitle() {
@@ -88,6 +90,10 @@ public class Poem {
 
     public String getLocationDate() {
         return locationDate;
+    }
+    
+    public String getOriginalLink() {
+        return originalLink;
     }
 
 }

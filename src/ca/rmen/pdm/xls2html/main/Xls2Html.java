@@ -159,6 +159,7 @@ public class Xls2Html {
             String preContent = values.get(Poem.Column.PRE_CONTENT.name());
             String content = values.get(Poem.Column.CONTENT.name());
             String year = values.get(Poem.Column.YEAR.name());
+            String link = values.get(Poem.Column.LINK.name());
             int month = Integer.valueOf(values.get(Poem.Column.MONTH.name()));
             int day = Integer.valueOf(values.get(Poem.Column.DAY.name()));
             String location = values.get(Poem.Column.LOCATION.name());
@@ -170,13 +171,13 @@ public class Xls2Html {
                 continue;
             switch (poemType) {
             case BREVERIA:
-                webpage.addBreveria(new Poem(title, "Brevería", poemNumber, preContent, content, locationDate));
+                webpage.addBreveria(new Poem(title, "Brevería", poemNumber, preContent, content, locationDate, link));
                 break;
             case SONNET:
-                webpage.addSonnet(new Poem(title, "Soneto", poemNumber, preContent, content, locationDate));
+                webpage.addSonnet(new Poem(title, "Soneto", poemNumber, preContent, content, locationDate, link));
                 break;
             default:
-                webpage.addOtherPoem(new Poem(title, null, poemNumber, preContent, content, locationDate));
+                webpage.addOtherPoem(new Poem(title, null, poemNumber, preContent, content, locationDate, link));
                 break;
             }
         }
