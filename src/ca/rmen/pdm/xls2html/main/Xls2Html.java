@@ -166,6 +166,8 @@ public class Xls2Html {
 
             String locationDate = day >= 1 ? location + ", " + day + " de " + MONTHS[month - 1] + " de " + year : location + ", " + MONTHS[month - 1] + " de "
                     + year;
+            if(content == null || content.isEmpty())
+                continue;
             Webpage webpage = documents.get(pageNumber);
             if(webpage == null) 
                 continue;
