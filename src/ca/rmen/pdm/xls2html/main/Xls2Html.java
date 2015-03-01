@@ -102,7 +102,7 @@ public class Xls2Html {
         Map<String, String> values = new HashMap<String, String>();
         int columnCount = sheet.getColumns();
         Cell[] row = sheet.getRow(rowId);
-        for (int c = 0; c < columnCount; c++) {
+        for (int c = 0; c < columnCount && c < row.length; c++) {
             String columnName = columnNames.get(c);
             if (columnName.startsWith("#"))
                 continue;
@@ -116,23 +116,29 @@ public class Xls2Html {
     /**
      * Read the "page" sheet in the Excel file which contains the data about each page (excluding the poem content).
      */
-    private static Map<Integer, Webpage> readPageMeta(Workbook wb) {
-        Map<Integer, Webpage> result = new HashMap<Integer, Webpage>();
+    private static Map<String, Webpage> readPageMeta(Workbook wb) {
+        Map<String, Webpage> result = new HashMap<String, Webpage>();
         Sheet pageSheet = wb.getSheet("page");
+        if(pageSheet == null)
+            return result;
         List<String> columnNames = readColumnNames(pageSheet);
         int rowCount = pageSheet.getRows();
         for (int r = 1; r < rowCount; r++) {
             Map<String, String> values = readRow(pageSheet, r, columnNames);
-            int pageNumber = Integer.parseInt(values.get(Webpage.Column.PAGE_NUMBER.name()));
+            String pageNumber = values.get(Webpage.Column.PAGE_NUMBER.name());
             Webpage webpage = new Webpage(pageNumber);
             String date = values.get(Webpage.Column.DATE.name());
             String paintingCaption = values.get(Webpage.Column.PAINTING_CAPTION.name());
             String songTitle = values.get(Webpage.Column.SONG_TITLE.name());
             String songLink = values.get(Webpage.Column.SONG_LINK.name());
+            String prevPageNumber = values.get(Webpage.Column.PREV_PAGE_NUMBER.name());
+            String nextPageNumber = values.get(Webpage.Column.NEXT_PAGE_NUMBER.name());
             webpage.setDate(date);
             webpage.setPaintingCaption(paintingCaption);
             webpage.setSongTitle(songTitle);
             webpage.setSongLink(songLink);
+            webpage.setPrevPageNumber(prevPageNumber);
+            webpage.setNextPageNumber(nextPageNumber);
             result.put(pageNumber, webpage);
         }
         return result;
@@ -142,7 +148,7 @@ public class Xls2Html {
      * Read the page and poem sheets of an Excel workbook, and return the list of Webpages which are ready to be given to freemarket to generate HTML files.
      */
     private static List<Webpage> readBook(Workbook wb) {
-        Map<Integer, Webpage> documents = readPageMeta(wb);
+        Map<String, Webpage> documents = readPageMeta(wb);
 
         Sheet poemSheet = wb.getSheet("poem");
         List<String> columnNames = readColumnNames(poemSheet);
@@ -154,7 +160,7 @@ public class Xls2Html {
             System.out.println(title);
             String poemTypeName = values.get(Poem.Column.POEM_TYPE.name());
             Poem.PoemType poemType = Poem.PoemType.valueOf(poemTypeName.toUpperCase(Locale.US));
-            int pageNumber = Integer.parseInt(values.get(Poem.Column.PAGE_NUMBER.name()));
+            String pageNumber = values.get(Poem.Column.PAGE_NUMBER.name());
             String poemNumber = values.get(Poem.Column.POEM_NUMBER.name());
             String preContent = values.get(Poem.Column.PRE_CONTENT.name());
             String content = values.get(Poem.Column.CONTENT.name());
@@ -185,9 +191,9 @@ public class Xls2Html {
         }
 
         final List<Webpage> result = new ArrayList<Webpage>();
-        SortedSet<Integer> pageNumbers = new TreeSet<Integer>();
+        SortedSet<String> pageNumbers = new TreeSet<String>();
         pageNumbers.addAll(documents.keySet());
-        for (Integer pageNumber : pageNumbers)
+        for (String pageNumber : pageNumbers)
             result.add(documents.get(pageNumber));
         return result;
     }

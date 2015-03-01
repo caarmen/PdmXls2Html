@@ -29,10 +29,12 @@ import java.util.List;
 
 public class Webpage {
     public enum Column {
-        PAGE_NUMBER, DATE, PAINTING_CAPTION, SONG_TITLE, SONG_LINK
-    };
+        PAGE_NUMBER, DATE, PAINTING_CAPTION, SONG_TITLE, SONG_LINK, PREV_PAGE_NUMBER, NEXT_PAGE_NUMBER
+    }
 
-    private int pageNumber;
+    private String pageNumber;
+    private String nextPageNumber;
+    private String prevPageNumber;
     private String date;
     private String paintingCaption;
     private String songTitle;
@@ -41,13 +43,25 @@ public class Webpage {
     private final List<Poem> sonnets = new ArrayList<Poem>();
     private final List<Poem> others = new ArrayList<Poem>();
 
-    public Webpage(int pageNumber) {
+    public Webpage(String pageNumber) {
         this.pageNumber = pageNumber;
     }
 
-    public int getPageNumber() {
+    public String getPageNumber() {
         return pageNumber;
     }
+
+    public String getNextPageNumber() {
+        return nextPageNumber;
+    }
+
+    public String getPrevPageNumber() {
+        return prevPageNumber;
+    }
+
+    public void setPrevPageNumber(String prevPageNumber) { this.prevPageNumber = prevPageNumber; }
+
+    public void setNextPageNumber(String nextPageNumber) { this.nextPageNumber = nextPageNumber; }
 
     public String getDate() {
         return date;
