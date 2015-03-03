@@ -40,17 +40,26 @@ public class Poem {
     private final String poemNumber;
     private final String preContent;
     private final String content;
+    private final String firstLine;
     private final String locationDate;
+    private final String date;
     private final String originalLink;
+    private final String titleSortKey;
+    private final String firstLineSortKey;
 
-    public Poem(String title, String poemType, String poemNumber, String preContent, String content, String locationDate, String originalLink) {
+    public Poem(String title, String poemType, String poemNumber, String preContent, String content, String locationDate, String date, String originalLink) {
         this.title = title;
         this.poemType = poemType;
         this.poemNumber = poemNumber;
         this.preContent = preContent;
         this.content = content;
         this.locationDate = locationDate;
+        this.date = date;
         this.originalLink = originalLink;
+        this.firstLine = content.replaceAll("\n.*", "");
+        this.titleSortKey = title.replaceAll("^[^\\p{L}]*", "");
+        this.firstLineSortKey = firstLine.replaceAll("^[^\\p{L}]*", "");
+
     }
 
     public String getTitle() {
@@ -88,12 +97,28 @@ public class Poem {
         return content;
     }
 
+    public String getFirstLine() {
+        return firstLine;
+    }
+
+
     public String getLocationDate() {
         return locationDate;
     }
-    
+
+    public String getDate() {
+        return date;
+    }
+
     public String getOriginalLink() {
         return originalLink;
     }
 
+    public String getFirstLineSortKey() {
+        return firstLineSortKey;
+    }
+
+    public String getTitleSortKey() {
+        return titleSortKey;
+    }
 }

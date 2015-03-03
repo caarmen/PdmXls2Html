@@ -62,6 +62,10 @@ public class Xls2Html {
         String templatePath = args[i++];
         List<Webpage> documents = readExcelFile(excelPath);
         for (Webpage webpage : documents) {
+            if(webpage.getBreverias().isEmpty() && webpage.getSonnets().isEmpty() && webpage.getOthers().isEmpty()) {
+                System.err.println("Skipping empty page " + webpage.getPageNumber());
+                continue;
+            }
             String htmlPath = templatePath.replaceAll(".ftl$", webpage.getPageNumber() + ".html");
             writeWebpage(webpage, templatePath, htmlPath);
         }
@@ -169,9 +173,10 @@ public class Xls2Html {
             int month = Integer.valueOf(values.get(Poem.Column.MONTH.name()));
             int day = Integer.valueOf(values.get(Poem.Column.DAY.name()));
             String location = values.get(Poem.Column.LOCATION.name());
-
-            String locationDate = day >= 1 ? location + ", " + day + " de " + MONTHS[month - 1] + " de " + year : location + ", " + MONTHS[month - 1] + " de "
+            String date = day >= 1 ? day + " de " + MONTHS[month - 1] + " de " + year : MONTHS[month - 1] + " de "
                     + year;
+
+            String locationDate = location + ", " + date;
             if(content == null || content.isEmpty())
                 continue;
             Webpage webpage = documents.get(pageNumber);
@@ -179,13 +184,13 @@ public class Xls2Html {
                 continue;
             switch (poemType) {
             case BREVERIA:
-                webpage.addBreveria(new Poem(title, "Brevería", poemNumber, preContent, content, locationDate, link));
+                webpage.addBreveria(new Poem(title, "Brevería", poemNumber, preContent, content, locationDate, date, link));
                 break;
             case SONNET:
-                webpage.addSonnet(new Poem(title, "Soneto", poemNumber, preContent, content, locationDate, link));
+                webpage.addSonnet(new Poem(title, "Soneto", poemNumber, preContent, content, locationDate, date, link));
                 break;
             default:
-                webpage.addOtherPoem(new Poem(title, null, poemNumber, preContent, content, locationDate, link));
+                webpage.addOtherPoem(new Poem(title, null, poemNumber, preContent, content, locationDate, date, link));
                 break;
             }
         }
