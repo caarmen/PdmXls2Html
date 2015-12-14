@@ -51,17 +51,21 @@ public class Db2Html {
 
     public static void main(String[] args) throws Throwable {
         int i = 0;
-        if(args.length != 2) {
-            System.err.println("Usage: Db2Html <db file> <template file>");
+        if(args.length != 3) {
+            System.err.println("Usage: Db2Html <db file> <index template file> <detail template file>");
             System.err.println("This program will generate a set of HTML files in the same folder as the template file");
             System.exit(1);;
         }
-        String excelPath = args[i++];
-        String templatePath = args[i++];
-        List<Webpage> documents = readDBFile(excelPath);
+        String dbPath = args[i++];
+        String detailTemplatePath = args[i++];
+        String indexTemplatePath = args[i++];
+        List<Webpage> documents = readDBFile(dbPath);
+        String indexHtmlPath = indexTemplatePath.replaceAll(".ftl$", ".html");
+        Webpage index = documents.remove(0);
+        writeWebpage(index, indexTemplatePath, indexHtmlPath);
         for (Webpage webpage : documents) {
-            String htmlPath = templatePath.replaceAll(".ftl$", webpage.getPageNumber() + ".html");
-            writeWebpage(webpage, templatePath, htmlPath);
+            String detailHtmlPath = detailTemplatePath.replaceAll(".ftl$", webpage.getPageNumber() + ".html");
+            writeWebpage(webpage, detailTemplatePath, detailHtmlPath);
         }
     }
 
@@ -71,11 +75,13 @@ public class Db2Html {
     }
 
     /**
-     * Read the DB file and return a list of Webpages which we can transform into HTML files.
+     * Read the DB file and return a list of Webpages which we can transform into HTML files. The first Webpage is the index.
      */
     private static List<Webpage> readDBFile(String filePath) throws SQLException, ClassNotFoundException {
         Connection connection = getDbConnection(filePath);
         List<Webpage> webpages = new ArrayList<Webpage>();
+        Webpage index =  new Webpage("index");
+        webpages.add(index);
         PreparedStatement statement = connection.prepareStatement("SELECT poem_number, content, year, month FROM breverias ORDER BY CAST(poem_number AS INTEGER)");
         ResultSet resultSet = statement.executeQuery();
         while (resultSet.next()) {
@@ -94,6 +100,7 @@ public class Db2Html {
             }
             String date = formatDate(year, month);
             webpage.addBreveria(new Poem(title, "Brevería", poemNumber, null, content, date, date, null));
+            index.addBreveria(new Poem(title, "Brevería", poemNumber, null, content, date, date, null));
             webpages.add(webpage);
         }
         return webpages;
@@ -115,7 +122,7 @@ public class Db2Html {
     /**
      * Create one HTML file for the given Webpage.  
      */
-    private static void writeWebpage(Webpage webpage, String inputTemplatePath, String outputHTMLPath) throws Throwable {
+    private static void writeWebpage(Object webpage, String inputTemplatePath, String outputHTMLPath) throws Throwable {
         Map<String, Object> root = new HashMap<String, Object>();
         root.put("webpage", webpage);
         Configuration cfg = new Configuration(Configuration.VERSION_2_3_21);
