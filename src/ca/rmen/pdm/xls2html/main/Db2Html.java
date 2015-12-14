@@ -90,13 +90,13 @@ public class Db2Html {
             String content = resultSet.getString("content");
             int year = resultSet.getInt("year");
             int month = resultSet.getInt("month");
-            String pageName = "breveria" + poemNumber;
+            String pageName = poemNumber;
             String title = "Brevería " + poemNumber;
             Webpage webpage = new Webpage(pageName);
             if (!webpages.isEmpty()) {
                 Webpage previousPage = webpages.get(webpages.size()-1);
-                webpage.setPrevPageNumber(previousPage.getPageNumber());
-                previousPage.setNextPageNumber(pageName);
+                webpage.setPrevPageNumber("breveria" + previousPage.getPageNumber());
+                previousPage.setNextPageNumber("breveria" + pageName);
             }
             String date = formatDate(year, month);
             webpage.addBreveria(new Poem(title, "Brevería", poemNumber, null, content, date, date, null));
