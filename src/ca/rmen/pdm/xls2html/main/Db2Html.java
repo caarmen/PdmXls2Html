@@ -26,6 +26,7 @@ package ca.rmen.pdm.xls2html.main;
 
 import ca.rmen.pdm.xls2html.model.Poem;
 import ca.rmen.pdm.xls2html.model.Webpage;
+import ca.rmen.pdm.xls2html.model.WebpageId;
 import com.sun.webkit.WebPage;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapperBuilder;
@@ -51,26 +52,32 @@ public class Db2Html {
 
     public static void main(String[] args) throws Throwable {
         int i = 0;
-        if(args.length != 9) {
-            System.err.println("Usage: Db2Html <db file> <breveria start> <breveria end> <sonnet start> <sonnet end> <page title> <prev page> <next page> <template file>");
+        if(args.length != 2) {
+            System.err.println("Usage: Db2Html <db file> <template file>");
             System.err.println("This program will generate an HTML file in the same folder as the template file");
             System.exit(1);
         }
         String dbPath = args[i++];
-        int breveriaStart = Integer.parseInt(args[i++]);
-        int breveriaEnd = Integer.parseInt(args[i++]);
-        int sonnetStart = Integer.parseInt(args[i++]);
-        int sonnetEnd = Integer.parseInt(args[i++]);
-        String pageTitle = args[i++];
-        String prevPageNumber = args[i++];
-        String nextPageNumber = args[i++];
         String templatePath = args[i++];
-        Webpage document = readDBFile(dbPath, breveriaStart, breveriaEnd, sonnetStart, sonnetEnd);
-        document.setPageNumber(pageTitle);
-        document.setPrevPageNumber(prevPageNumber);
-        document.setNextPageNumber(nextPageNumber);
-        String htmlPath = templatePath.replaceAll(".ftl$", ".html");
-        writeWebpage(document, templatePath, htmlPath);
+        List<WebpageId> webpageIds = readWebpageIds(dbPath);
+        for (int id = 0; id < webpageIds.size(); id++) {
+            WebpageId webpageId = webpageIds.get(id);
+            Webpage document = readDBFile(dbPath, webpageId);
+            if (id > 0) {
+                WebpageId previousPage = webpageIds.get(id-1);
+                document.setPrevPageNumber("/" + previousPage.year + "/poemas" + previousPage.id + ".html");
+            }
+            if (id < webpageIds.size() - 1) {
+                WebpageId nextPage = webpageIds.get(id + 1);
+                document.setNextPageNumber("/" + nextPage.year + "/poemas" + nextPage.id + ".html");
+            }
+            document.setPageNumber(webpageId.title);
+            File outputRootDir = new File(templatePath).getParentFile();
+            File outputDir = new File(outputRootDir, String.valueOf(webpageId.year));
+            if (!outputDir.exists()) outputDir.mkdirs();
+            File outputFile = new File(outputDir, "poemas" + webpageId.id + ".html");
+            writeWebpage(document, templatePath, outputFile.getAbsolutePath());
+        }
     }
 
     private static Connection getDbConnection(String dbPath) throws SQLException, ClassNotFoundException {
@@ -78,25 +85,41 @@ public class Db2Html {
         return DriverManager.getConnection("jdbc:sqlite:" + dbPath);
     }
 
+    private static List<WebpageId> readWebpageIds(String dbPath) throws SQLException, ClassNotFoundException {
+        Connection connection = getDbConnection(dbPath);
+        PreparedStatement statement = connection.prepareStatement("SELECT web, year, month, title FROM webs ORDER BY CAST(web AS INTEGER)");
+        List<WebpageId> webpageIds = new ArrayList<WebpageId>();
+        ResultSet resultSet = statement.executeQuery();
+        while (resultSet.next()) {
+            String webpageId = resultSet.getString("web");
+            int year = resultSet.getInt("year");
+            int month = resultSet.getInt("month");
+            String title = resultSet.getString("title");
+            webpageIds.add(new WebpageId(webpageId, year, month, title));
+        }
+        resultSet.close();
+        connection.close();
+        return webpageIds;
+    }
     /**
-     * Read the DB file and return a list of Webpages which we can transform into HTML files. The first Webpage is the index.
+     * Read the DB file and return a Webpage which we can transform into an HTML file.
      */
-    private static Webpage readDBFile(String filePath, int breveriaStart, int breveriaEnd, int sonnetStart, int sonnetEnd) throws SQLException, ClassNotFoundException {
+    private static Webpage readDBFile(String filePath, WebpageId webpageId) throws SQLException, ClassNotFoundException {
         Connection connection = getDbConnection(filePath);
         Webpage webpage = new Webpage("");
-        PreparedStatement statement = connection.prepareStatement("SELECT poem_number, content FROM breverias WHERE CAST(poem_number AS INTEGER) >= ? and CAST(poem_number AS INTEGER) <= ? ORDER BY CAST(poem_number AS INTEGER)");
-        statement.setInt(1, breveriaStart);
-        statement.setInt(2, breveriaEnd);
+        PreparedStatement statement = connection.prepareStatement("SELECT poem_number, content FROM breverias WHERE web = ? ORDER BY CAST(poem_number AS INTEGER)");
+        statement.setString(1, webpageId.id);
         ResultSet resultSet = statement.executeQuery();
         while (resultSet.next()) {
             String poemNumber = resultSet.getString("poem_number");
             String content = resultSet.getString("content");
             webpage.addBreveria(new Poem(poemNumber, poemNumber, poemNumber, null, content, null, null, null));
         }
+        resultSet.close();
         statement.close();
-        statement = connection.prepareStatement("SELECT poem_number, title, pre_content, content, location, year, month, day FROM sonetos WHERE CAST(poem_number AS INTEGER) >= ? and CAST(poem_number AS INTEGER) <= ? ORDER BY CAST(poem_number AS INTEGER)");
-        statement.setInt(1, sonnetStart);
-        statement.setInt(2, sonnetEnd);
+
+        statement = connection.prepareStatement("SELECT poem_number, title, pre_content, content, location, year, month, day FROM sonetos WHERE web = ? ORDER BY CAST(poem_number AS INTEGER)");
+        statement.setString(1, webpageId.id);
         resultSet = statement.executeQuery();
         while (resultSet.next()) {
             String poemNumber = resultSet.getString("poem_number");
@@ -112,6 +135,26 @@ public class Db2Html {
                             formatLocationDate(year, month, day, location), null, null)
             );
         }
+        resultSet.close();
+        statement.close();
+
+        statement = connection.prepareStatement("SELECT title, pre_content, content, location, year, month, day FROM otros_poemas WHERE web = ? ORDER BY year, month, day");
+        statement.setString(1, webpageId.id);
+        resultSet = statement.executeQuery();
+        while (resultSet.next()) {
+            String title = resultSet.getString("title");
+            String preContent = resultSet.getString("pre_content");
+            String content = resultSet.getString("content");
+            int year = resultSet.getInt("year");
+            int month = resultSet.getInt("month");
+            int day = resultSet.getInt("day");
+            String location = resultSet.getString("location");
+            webpage.addOtherPoem(
+                    new Poem(title, Poem.PoemType.OTHER.name(), null, preContent, content,
+                            formatLocationDate(year, month, day, location), null, null)
+            );
+        }
+        resultSet.close();
         statement.close();
         return webpage;
     }
@@ -127,7 +170,7 @@ public class Db2Html {
         SimpleDateFormat sdf = new SimpleDateFormat("MMMM' de 'yyyy", localeES);
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.YEAR, year);
-        calendar.set(Calendar.MONTH, month);
+        calendar.set(Calendar.MONTH, month - 1);
         calendar.set(Calendar.DAY_OF_MONTH, 1);
         return sdf.format(calendar.getTime());
     }
@@ -136,6 +179,7 @@ public class Db2Html {
      * Create one HTML file for the given Webpage.  
      */
     private static void writeWebpage(Object webpage, String inputTemplatePath, String outputHTMLPath) throws Throwable {
+        System.out.println("Writing " + outputHTMLPath);
         Map<String, Object> root = new HashMap<String, Object>();
         root.put("webpage", webpage);
         Configuration cfg = new Configuration(Configuration.VERSION_2_3_21);

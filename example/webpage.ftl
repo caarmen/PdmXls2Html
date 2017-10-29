@@ -19,12 +19,16 @@ de
    <div class="title light-text">${webpage.pageNumber}</div>
    <div id="index" class="index">
     <h1>Índice</h1>
+    <#if webpage.breverias?has_content>
     <div class="index-heading"><a href="#breverias">Breverías</a></div>
+    </#if>
 
+    <#if webpage.sonnets?has_content>
     <div class="index-heading">Sonetos:</div>
     <#list webpage.sonnets as poem>
      <a href="#${poem.id}">${poem.title}</a>
     </#list>
+    </#if>
 
     <#if webpage.others?has_content>
     <div class="index-heading">Otros poemas:</div>
@@ -37,6 +41,7 @@ de
     <img src= "/mensuales/divider.png">
    </div>
    <div class="poems">
+    <#if webpage.breverias?has_content>
     <h1 id="breverias">Breverías</h1>
      <div class="poem breveria">
     <#list webpage.breverias as poem>
@@ -57,6 +62,8 @@ de
       </#if>
     </#list>
      </div>
+    </#if>
+    <#if webpage.sonnets?has_content>
     <h1>Sonetos</h1>
     <#list webpage.sonnets as poem>
      <div class="poem soneto">
@@ -77,6 +84,7 @@ de
      </div>
      </#if>
     </#list>
+    </#if>
     <#if webpage.others?has_content>
     <h1>Otros</h1>
     <#list webpage.others as poem>
