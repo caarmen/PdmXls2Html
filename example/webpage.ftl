@@ -90,12 +90,16 @@ de
     <#list webpage.others as poem>
      <#if poem.content??>
       <div class="poem otros">
+       <div class="card-top"></div>
+       <div class="card-left"></div>
        <div class="poem-left-border"></div>
        <div class="poem-right-border"></div>
        <div id="${poem.id}" class="poem-title">${poem.title}</div>
        <div class="poem-content">${poem.content}</div>
        <div class="poem-date">${poem.locationDate}</div>
        <div class="link-to-index"><a href="#index">Índice</a></div>
+       <div class="card-right"></div>
+       <div class="card-bottom"></div>
       </div>
       <#if poem_has_next>
       <div class="poem-divider">

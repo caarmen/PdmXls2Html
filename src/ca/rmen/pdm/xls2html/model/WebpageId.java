@@ -28,15 +28,31 @@ import java.util.Collections;
 import java.util.List;
 
 public class WebpageId {
-    public final String id;
-    public final int year;
-    public final int month;
-    public final String title;
+    private final String id;
+    private final int year;
+    private final int month;
+    private final String title;
 
     public WebpageId(String id, int year, int month, String title) {
         this.id = id;
         this.year = year;
         this.month = month;
         this.title = title;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public int getYear() {
+        return year;
+    }
+
+    public int getMonth() {
+        return month;
+    }
+
+    public String getTitle() {
+        return title;
     }
 }

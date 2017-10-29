@@ -31,10 +31,12 @@ import com.sun.webkit.WebPage;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -52,30 +54,32 @@ public class Db2Html {
 
     public static void main(String[] args) throws Throwable {
         int i = 0;
-        if(args.length != 2) {
-            System.err.println("Usage: Db2Html <db file> <template file>");
+        if(args.length != 3) {
+            System.err.println("Usage: Db2Html <db file> <template file> <index template file>");
             System.err.println("This program will generate an HTML file in the same folder as the template file");
             System.exit(1);
         }
         String dbPath = args[i++];
         String templatePath = args[i++];
+        String indexTemplatePath = args[i++];
         List<WebpageId> webpageIds = readWebpageIds(dbPath);
+        writeIndexPages(webpageIds, indexTemplatePath);
         for (int id = 0; id < webpageIds.size(); id++) {
             WebpageId webpageId = webpageIds.get(id);
             Webpage document = readDBFile(dbPath, webpageId);
-            if (id > 0) {
-                WebpageId previousPage = webpageIds.get(id-1);
-                document.setPrevPageNumber("/" + previousPage.year + "/poemas" + previousPage.id + ".html");
-            }
             if (id < webpageIds.size() - 1) {
-                WebpageId nextPage = webpageIds.get(id + 1);
-                document.setNextPageNumber("/" + nextPage.year + "/poemas" + nextPage.id + ".html");
+                WebpageId previousPage = webpageIds.get(id + 1);
+                document.setPrevPageNumber("/" + previousPage.getYear() + "/poemas" + previousPage.getId() + ".html");
             }
-            document.setPageNumber(webpageId.title);
+            if (id > 0) {
+                WebpageId nextPage = webpageIds.get(id - 1);
+                document.setNextPageNumber("/" + nextPage.getYear() + "/poemas" + nextPage.getId() + ".html");
+            }
+            document.setPageNumber(webpageId.getTitle());
             File outputRootDir = new File(templatePath).getParentFile();
-            File outputDir = new File(outputRootDir, String.valueOf(webpageId.year));
+            File outputDir = new File(outputRootDir, String.valueOf(webpageId.getYear()));
             if (!outputDir.exists()) outputDir.mkdirs();
-            File outputFile = new File(outputDir, "poemas" + webpageId.id + ".html");
+            File outputFile = new File(outputDir, "poemas" + webpageId.getId() + ".html");
             writeWebpage(document, templatePath, outputFile.getAbsolutePath());
         }
     }
@@ -87,7 +91,7 @@ public class Db2Html {
 
     private static List<WebpageId> readWebpageIds(String dbPath) throws SQLException, ClassNotFoundException {
         Connection connection = getDbConnection(dbPath);
-        PreparedStatement statement = connection.prepareStatement("SELECT web, year, month, title FROM webs ORDER BY CAST(web AS INTEGER)");
+        PreparedStatement statement = connection.prepareStatement("SELECT web, year, month, title FROM webs ORDER BY CAST(web AS INTEGER) DESC, web DESC");
         List<WebpageId> webpageIds = new ArrayList<WebpageId>();
         ResultSet resultSet = statement.executeQuery();
         while (resultSet.next()) {
@@ -108,7 +112,7 @@ public class Db2Html {
         Connection connection = getDbConnection(filePath);
         Webpage webpage = new Webpage("");
         PreparedStatement statement = connection.prepareStatement("SELECT poem_number, content FROM breverias WHERE web = ? ORDER BY CAST(poem_number AS INTEGER)");
-        statement.setString(1, webpageId.id);
+        statement.setString(1, webpageId.getId());
         ResultSet resultSet = statement.executeQuery();
         while (resultSet.next()) {
             String poemNumber = resultSet.getString("poem_number");
@@ -119,7 +123,7 @@ public class Db2Html {
         statement.close();
 
         statement = connection.prepareStatement("SELECT poem_number, title, pre_content, content, location, year, month, day FROM sonetos WHERE web = ? ORDER BY CAST(poem_number AS INTEGER)");
-        statement.setString(1, webpageId.id);
+        statement.setString(1, webpageId.getId());
         resultSet = statement.executeQuery();
         while (resultSet.next()) {
             String poemNumber = resultSet.getString("poem_number");
@@ -139,7 +143,7 @@ public class Db2Html {
         statement.close();
 
         statement = connection.prepareStatement("SELECT title, pre_content, content, location, year, month, day FROM otros_poemas WHERE web = ? ORDER BY year, month, day");
-        statement.setString(1, webpageId.id);
+        statement.setString(1, webpageId.getId());
         resultSet = statement.executeQuery();
         while (resultSet.next()) {
             String title = resultSet.getString("title");
@@ -159,6 +163,24 @@ public class Db2Html {
         return webpage;
     }
 
+    private static void writeIndexPages(List<WebpageId> webpageIds, String templatePath) throws IOException, TemplateException {
+        Map<Integer, List<WebpageId>> webpageIdsPerYear = new HashMap<Integer, List<WebpageId>>();
+        for (WebpageId webpageId : webpageIds) {
+            List<WebpageId> pages = webpageIdsPerYear.get(webpageId.getYear());
+            if (pages == null) {
+                pages = new ArrayList<WebpageId>();
+                webpageIdsPerYear.put(webpageId.getYear(), pages);
+            }
+            pages.add(webpageId);
+        }
+        for (int year : webpageIdsPerYear.keySet()) {
+            List<WebpageId> pages = webpageIdsPerYear.get(year);
+            File outputRootDir = new File(templatePath).getParentFile();
+            File outputDir = new File(outputRootDir, String.valueOf(year));
+            File outputFile = new File(outputDir, "index.html");
+            writeIndex(year, pages, templatePath, outputFile.getAbsolutePath());
+        }
+    }
     private static String formatLocationDate(int year, int month, int day, String location) {
         return location + ", " + day + " de " + formatDate(year, month);
     }
@@ -182,6 +204,18 @@ public class Db2Html {
         System.out.println("Writing " + outputHTMLPath);
         Map<String, Object> root = new HashMap<String, Object>();
         root.put("webpage", webpage);
+        writePage(root, inputTemplatePath, outputHTMLPath);
+    }
+
+    private static void writeIndex(int year, List<WebpageId> webpageIds, String inputTemplatePath, String outputHTMLPath) throws IOException, TemplateException {
+        System.out.println("Writing " + outputHTMLPath);
+        Map<String, Object> root = new HashMap<String, Object>();
+        root.put("webpageIds", webpageIds);
+        root.put("year", year);
+        writePage(root, inputTemplatePath, outputHTMLPath);
+    }
+
+    private static void writePage(Map<String,Object> root, String inputTemplatePath, String outputHTMLPath) throws IOException, TemplateException {
         Configuration cfg = new Configuration(Configuration.VERSION_2_3_21);
         cfg.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER);
         cfg.setObjectWrapper(new DefaultObjectWrapperBuilder(cfg.getIncompatibleImprovements()).build());
