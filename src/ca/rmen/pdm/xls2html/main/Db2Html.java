@@ -51,22 +51,26 @@ public class Db2Html {
 
     public static void main(String[] args) throws Throwable {
         int i = 0;
-        if(args.length != 3) {
-            System.err.println("Usage: Db2Html <db file> <index template file> <detail template file>");
-            System.err.println("This program will generate a set of HTML files in the same folder as the template file");
-            System.exit(1);;
+        if(args.length != 9) {
+            System.err.println("Usage: Db2Html <db file> <breveria start> <breveria end> <sonnet start> <sonnet end> <page title> <prev page> <next page> <template file>");
+            System.err.println("This program will generate an HTML file in the same folder as the template file");
+            System.exit(1);
         }
         String dbPath = args[i++];
-        String detailTemplatePath = args[i++];
-        String indexTemplatePath = args[i++];
-        List<Webpage> documents = readDBFile(dbPath);
-        String indexHtmlPath = indexTemplatePath.replaceAll(".ftl$", ".html");
-        Webpage index = documents.remove(0);
-        writeWebpage(index, indexTemplatePath, indexHtmlPath);
-        for (Webpage webpage : documents) {
-            String detailHtmlPath = detailTemplatePath.replaceAll(".ftl$", webpage.getPageNumber() + ".html");
-            writeWebpage(webpage, detailTemplatePath, detailHtmlPath);
-        }
+        int breveriaStart = Integer.parseInt(args[i++]);
+        int breveriaEnd = Integer.parseInt(args[i++]);
+        int sonnetStart = Integer.parseInt(args[i++]);
+        int sonnetEnd = Integer.parseInt(args[i++]);
+        String pageTitle = args[i++];
+        String prevPageNumber = args[i++];
+        String nextPageNumber = args[i++];
+        String templatePath = args[i++];
+        Webpage document = readDBFile(dbPath, breveriaStart, breveriaEnd, sonnetStart, sonnetEnd);
+        document.setPageNumber(pageTitle);
+        document.setPrevPageNumber(prevPageNumber);
+        document.setNextPageNumber(nextPageNumber);
+        String htmlPath = templatePath.replaceAll(".ftl$", ".html");
+        writeWebpage(document, templatePath, htmlPath);
     }
 
     private static Connection getDbConnection(String dbPath) throws SQLException, ClassNotFoundException {
@@ -77,35 +81,44 @@ public class Db2Html {
     /**
      * Read the DB file and return a list of Webpages which we can transform into HTML files. The first Webpage is the index.
      */
-    private static List<Webpage> readDBFile(String filePath) throws SQLException, ClassNotFoundException {
+    private static Webpage readDBFile(String filePath, int breveriaStart, int breveriaEnd, int sonnetStart, int sonnetEnd) throws SQLException, ClassNotFoundException {
         Connection connection = getDbConnection(filePath);
-        List<Webpage> webpages = new ArrayList<Webpage>();
-        Webpage index =  new Webpage("index");
-        webpages.add(index);
-        PreparedStatement statement = connection.prepareStatement("SELECT poem_number, content, year, month FROM breverias ORDER BY CAST(poem_number AS INTEGER)");
+        Webpage webpage = new Webpage("");
+        PreparedStatement statement = connection.prepareStatement("SELECT poem_number, content FROM breverias WHERE CAST(poem_number AS INTEGER) >= ? and CAST(poem_number AS INTEGER) <= ? ORDER BY CAST(poem_number AS INTEGER)");
+        statement.setInt(1, breveriaStart);
+        statement.setInt(2, breveriaEnd);
         ResultSet resultSet = statement.executeQuery();
         while (resultSet.next()) {
-
             String poemNumber = resultSet.getString("poem_number");
+            String content = resultSet.getString("content");
+            webpage.addBreveria(new Poem(poemNumber, poemNumber, poemNumber, null, content, null, null, null));
+        }
+        statement.close();
+        statement = connection.prepareStatement("SELECT poem_number, title, pre_content, content, location, year, month, day FROM sonetos WHERE CAST(poem_number AS INTEGER) >= ? and CAST(poem_number AS INTEGER) <= ? ORDER BY CAST(poem_number AS INTEGER)");
+        statement.setInt(1, sonnetStart);
+        statement.setInt(2, sonnetEnd);
+        resultSet = statement.executeQuery();
+        while (resultSet.next()) {
+            String poemNumber = resultSet.getString("poem_number");
+            String title = resultSet.getString("title");
+            String preContent = resultSet.getString("pre_content");
             String content = resultSet.getString("content");
             int year = resultSet.getInt("year");
             int month = resultSet.getInt("month");
-            String pageName = poemNumber;
-            String title = "Brevería " + poemNumber;
-            Webpage webpage = new Webpage(pageName);
-            if (!webpages.isEmpty()) {
-                Webpage previousPage = webpages.get(webpages.size()-1);
-                webpage.setPrevPageNumber("breveria" + previousPage.getPageNumber());
-                previousPage.setNextPageNumber("breveria" + pageName);
-            }
-            String date = formatDate(year, month);
-            webpage.addBreveria(new Poem(title, "Brevería", poemNumber, null, content, date, date, null));
-            index.addBreveria(new Poem(title, "Brevería", poemNumber, null, content, date, date, null));
-            webpages.add(webpage);
+            int day = resultSet.getInt("day");
+            String location = resultSet.getString("location");
+            webpage.addSonnet(
+                    new Poem(title, Poem.PoemType.SONNET.name(), poemNumber, preContent, content,
+                            formatLocationDate(year, month, day, location), null, null)
+            );
         }
-        return webpages;
+        statement.close();
+        return webpage;
     }
 
+    private static String formatLocationDate(int year, int month, int day, String location) {
+        return location + ", " + day + " de " + formatDate(year, month);
+    }
     /**
      * @return the given date formatted in the Spanish locale.
      */

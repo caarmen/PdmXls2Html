@@ -51,6 +51,9 @@ public class Webpage {
         return pageNumber;
     }
 
+    public void setPageNumber (String pageNumber) {
+        this.pageNumber = pageNumber;
+    }
     public String getNextPageNumber() {
         return nextPageNumber;
     }

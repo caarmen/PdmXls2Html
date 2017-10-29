@@ -3,30 +3,20 @@
  <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=610px">
-  <link rel="stylesheet" type="text/css" href="common.css">
-  <link rel="stylesheet" type="text/css" href="webpage${webpage.pageNumber}.css">
-  <title>Selección de los lectores N°${webpage.pageNumber}</title>
+  <link rel="stylesheet" type="text/css" href="/common.css">
+  <link rel="stylesheet" type="text/css" href="/mensuales/common.css">
+  <title>${webpage.pageNumber}</title>
  </head>
- <body style="background-image: url(background${webpage.pageNumber}.png)">
-  <#if webpage.songTitle??>
-  <bgsound src="musica${webpage.pageNumber}.mid" loop="infinite"/>
-  </#if>
+ <body style="background-image: url(/background.png)">
   <div class="container">
-   <div class="left-border"></div>
-   <div class="right-border"></div>
-   <div class="logo"><a href="/"><img src="logo.png" alt="Francisco Álvarez Hidalgo"></a></div>
+   <div class="left-border-wide"></div>
+   <div class="right-border-wide"></div>
+   <div class="logo logo-main" data-text="Poesía del Momento"><a href="/">Poesía del Momento</a></div>
    <div class="slogan">Poemas de amor, de soledad, de esperanza
 de
    </div>
    <div class="author">Francisco Álvarez Hidalgo</div>
-   <div class="title">Selección de los lectores</div>
-   <div class="subtitle">Edición N°${webpage.pageNumber} - ${webpage.date}</div>
-   <div class="painting">
-    <img src="painting${webpage.pageNumber}.jpg" alt="${webpage.paintingCaption}">
-   </div>
-   <div class="caption">
-     ${webpage.paintingCaption}
-   </div>
+   <div class="title light-text">${webpage.pageNumber}</div>
    <div id="index" class="index">
     <h1>Índice</h1>
     <div class="index-heading"><a href="#breverias">Breverías</a></div>
@@ -36,46 +26,58 @@ de
      <a href="#${poem.id}">${poem.title}</a>
     </#list>
 
+    <#if webpage.others?has_content>
     <div class="index-heading">Otros poemas:</div>
     <#list webpage.others as poem>
      <a href="#${poem.id}">${poem.title}</a>
     </#list>
+    </#if>
    </div>
    <div class="poem-divider">
-    <img src= "divider${webpage.pageNumber}.png">
+    <img src= "/mensuales/divider.png">
    </div>
    <div class="poems">
     <h1 id="breverias">Breverías</h1>
      <div class="poem breveria">
     <#list webpage.breverias as poem>
+      <#if (poem_index = 0)>
+      <div class="card-top"></div>
+      </#if>
+      <div class="card-left"></div>
       <div class="poem-left-border"></div>
       <div class="poem-right-border"></div>
       <div id="${poem.id}" class="poem-title">${poem.poemNumber}</div>
       <div class="poem-content">${poem.content}</div>
-      <div class="poem-date">${poem.locationDate}</div>
+      <div class="card-right"></div>
       <#if poem_has_next>
       <br>
       <#else>
       <div class="link-to-index"><a href="#index">Índice</a></div>
+      <div class="card-bottom"></div>
       </#if>
     </#list>
      </div>
     <h1>Sonetos</h1>
     <#list webpage.sonnets as poem>
      <div class="poem soneto">
+      <div class="card-top"></div>
+      <div class="card-left"></div>
       <div class="poem-left-border"></div>
       <div class="poem-right-border"></div>
       <div id="${poem.id}" class="poem-title">${poem.poemNumber} - ${poem.title}</div>
       <div class="poem-content">${poem.content}</div>
       <div class="poem-date">${poem.locationDate}</div>
       <div class="link-to-index"><a href="#index">Índice</a></div>
+      <div class="card-right"></div>
+      <div class="card-bottom"></div>
      </div>
      <#if poem_has_next>
      <div class="poem-divider">
-      <img src= "divider${webpage.pageNumber}.png">
+      <img src= "/mensuales/divider.png">
      </div>
      </#if>
     </#list>
+    <#if webpage.others?has_content>
     <h1>Otros</h1>
     <#list webpage.others as poem>
      <#if poem.content??>
@@ -89,26 +91,23 @@ de
       </div>
       <#if poem_has_next>
       <div class="poem-divider">
-       <img src= "divider${webpage.pageNumber}.png">
+       <img src= "/mensuales/divider.png">
       </div>
       </#if>
      </#if>
     </#list>
+    </#if>
    </div>
    <div class="nav">
-    <div class="nav-prev"><a href="webpage${webpage.pageNumber - 1}.html">&larr;&nbsp;Anterior</a></div>
-    <div class="nav-next"><a href="webpage${webpage.pageNumber + 1}.html">Siguiente&nbsp;&rarr;</a></div>
-   </div>
-   <div class="footer">
-    <!--#set var="formTextColor" value="#BB9"-->
-    <!--#set var="formBGColor" value="#000000"-->
-    <!--#include virtual="/enlaces/cajita-utf8.html"-->
+    <#if webpage.prevPageNumber?has_content>
+    <a href="${webpage.prevPageNumber}"><span class="nav-prev">&larr;&nbsp;Anterior</span></a>
+    </#if>
+    <#if webpage.nextPageNumber?has_content>
+    <a href="${webpage.nextPageNumber}"><span class="nav-next">Siguiente&nbsp;&rarr;</span></a>
+    </#if>
    </div>
    <div class="fineprint">
-   <#if webpage.songTitle??>
-   Música: ${webpage.songTitle}. Fuente: <a href="${webpage.songLink}">Mutopia</a>.
-   <br>
-   </#if>
+   Diseño: Carmen Álvarez<br>
    Poemas &copy; Francisco Álvarez Hidalgo, Familia Álvarez, 1997-2014. <a href="/enlacesindice.html#derechos">Todos derechos reservados.</a>
    </div>
   </div>
