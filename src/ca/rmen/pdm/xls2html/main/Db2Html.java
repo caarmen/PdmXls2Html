@@ -75,27 +75,58 @@ public class Db2Html {
                 if (!outputDir.exists()) outputDir.mkdirs();
                 File outputFile = new File(outputDir, page.getId() + ".html");
                 Webpage document = readDBFile(dbPath, page);
-                if (pid < pages.size() - 1) {
-                    Page previousPage = pages.get(pid + 1);
-                    document.setPrevPageNumber("/" + collection.getId() + "/" + previousPage.getId() + ".html");
-                } else if (cid < collections.size() - 1) {
-                    PageCollection previousCollection = collections.get(cid + 1);
-                    Page previousPage = pagesPerCollection.get(previousCollection).get(0);
-                    document.setPrevPageNumber("/" + collection.getId() + "/" + previousPage.getId() + ".html");
+                String nextPageId = getNextPageId(collections, pagesPerCollection, cid, pid);
+                String prevPageId = getPrevPageId(collections, pagesPerCollection, cid, pid);
+                if (nextPageId != null) {
+                    if ("ASC".equals(sortOrder)) {
+                        document.setNextPageNumber(nextPageId);
+                    } else {
+                        document.setPrevPageNumber(nextPageId);
+                    }
                 }
-                if (pid > 0) {
-                    Page nextPage = pages.get(pid - 1);
-                    document.setNextPageNumber("/" + collection.getId() + "/" + nextPage.getId() + ".html");
-                } else if (cid > 0) {
-                    PageCollection nextCollection = collections.get(cid - 1);
-                    List<Page> pagesNextCollection = pagesPerCollection.get(nextCollection);
-                    Page nextPage = pagesNextCollection.get(pagesNextCollection.size() - 1);
-                    document.setNextPageNumber("/" + collection.getId() + "/" + nextPage.getId() + ".html");
+                if (prevPageId != null) {
+                    if ("ASC".equals(sortOrder)) {
+                        document.setPrevPageNumber(prevPageId);
+                    } else {
+                        document.setNextPageNumber(prevPageId);
+                    }
                 }
                 document.setPageNumber(page.getTitle());
                 writeWebpage(document, templatePath, outputFile.getAbsolutePath());
             }
         }
+    }
+
+    private static String getPrevPageId(List<PageCollection> collections, Map<PageCollection, List<Page>> pagesPerCollection, int collectionIndex, int pageIndex) {
+        PageCollection currentCollection = collections.get(collectionIndex);
+        List<Page> pagesInCurrentCollection = pagesPerCollection.get(currentCollection);
+        if (pageIndex > 0) {
+            Page prevPage = pagesInCurrentCollection.get(pageIndex - 1);
+            return "/" + currentCollection.getId()+ "/" + prevPage.getId() + ".html";
+        }
+        if (collectionIndex > 0) {
+            PageCollection prevCollection = collections.get(collectionIndex - 1);
+            List<Page> pagesInPrevCollection = pagesPerCollection.get(prevCollection);
+            Page prevPage = pagesInPrevCollection.get(pagesInPrevCollection.size() - 1);
+            return "/" + prevCollection.getId() + "/" + prevPage.getId() + ".html";
+        }
+        return null; // This is the first page
+    }
+
+    private static String getNextPageId(List<PageCollection> collections, Map<PageCollection, List<Page>> pagesPerCollection, int collectionIndex, int pageIndex) {
+        PageCollection currentCollection = collections.get(collectionIndex);
+        List<Page> pagesInCurrentCollection = pagesPerCollection.get(currentCollection);
+        if (pageIndex < pagesInCurrentCollection.size() - 1) {
+            Page nextPage = pagesInCurrentCollection.get(pageIndex + 1);
+            return "/" + currentCollection.getId()+ "/" + nextPage.getId() + ".html";
+        }
+        if (collectionIndex < collections.size() - 1) {
+            PageCollection nextCollection = collections.get(collectionIndex + 1);
+            List<Page> pagesInNextCollection = pagesPerCollection.get(nextCollection);
+            Page nextPage = pagesInNextCollection.get(0);
+            return "/" + currentCollection.getId()+ "/" + nextPage.getId() + ".html";
+        }
+        return null; // This is the last page
     }
 
     private static Connection getDbConnection(String dbPath) throws SQLException, ClassNotFoundException {
@@ -106,7 +137,7 @@ public class Db2Html {
     private static List<PageCollection> readCollections(String dbPath, String[] collectionIds, String sortOrder) throws SQLException, ClassNotFoundException {
         Connection connection = getDbConnection(dbPath);
         PreparedStatement statement = connection.prepareStatement("SELECT collection_id, title FROM collections WHERE collection_id IN " + buildInClause(collectionIds.length)
-                + " ORDER BY collection_id " + sortOrder);
+                + " ORDER BY CAST(collection_id AS INTEGER)" + sortOrder + ", collection_id " + sortOrder);
         for (int i = 0; i < collectionIds.length; i++) {
             statement.setString(i + 1, collectionIds[i]);
         }
