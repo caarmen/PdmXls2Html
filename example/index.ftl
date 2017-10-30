@@ -15,12 +15,12 @@
         <div class="left-border"></div>
         <div class="right-border"></div>
         <div class="content-text">
-            <div class="logo logo-small">Año ${year?long?c}</div>
+            <div class="logo logo-small">${collection.title}</div>
             <table class="portal-table">
                 <tr>
-                <#list webpageIds as webpageId>
-                    <td class="portal-entry"><a href="/${year?long?c}/poemas${webpageId.id}.html">${webpageId.title}</a></td>
-                    <#if webpageId_index % 3 == 2>
+                <#list pages as page>
+                    <td class="portal-entry"><a href="/${collection.id}/${page.id}.html">${page.title}</a></td>
+                    <#if page_index % 3 == 2>
                 </tr>
                 <tr>
                     </#if>

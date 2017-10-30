@@ -24,18 +24,13 @@ THE SOFTWARE.
 
 package ca.rmen.pdm.xls2html.main;
 
+import ca.rmen.pdm.xls2html.model.PageCollection;
 import ca.rmen.pdm.xls2html.model.Poem;
 import ca.rmen.pdm.xls2html.model.Webpage;
-import ca.rmen.pdm.xls2html.model.WebpageId;
-import com.sun.webkit.WebPage;
-import freemarker.template.Configuration;
-import freemarker.template.DefaultObjectWrapperBuilder;
-import freemarker.template.Template;
+import ca.rmen.pdm.xls2html.model.Page;
 import freemarker.template.TemplateException;
-import freemarker.template.TemplateExceptionHandler;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -45,7 +40,9 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -54,33 +51,50 @@ public class Db2Html {
 
     public static void main(String[] args) throws Throwable {
         int i = 0;
-        if(args.length != 3) {
-            System.err.println("Usage: Db2Html <db file> <template file> <index template file>");
+        if (args.length != 5) {
+            System.err.println("Usage: Db2Html <db file> <collection ids csv> <template file> <index template file> <DESC|ASC>");
             System.err.println("This program will generate an HTML file in the same folder as the template file");
             System.exit(1);
         }
         String dbPath = args[i++];
+        String[] collectionIds = args[i++].split(",");
         String templatePath = args[i++];
         String indexTemplatePath = args[i++];
-        List<WebpageId> webpageIds = readWebpageIds(dbPath);
-        writeIndexPages(webpageIds, indexTemplatePath);
-        for (int id = 0; id < webpageIds.size(); id++) {
-            WebpageId webpageId = webpageIds.get(id);
-            Webpage document = readDBFile(dbPath, webpageId);
-            if (id < webpageIds.size() - 1) {
-                WebpageId previousPage = webpageIds.get(id + 1);
-                document.setPrevPageNumber("/" + previousPage.getYear() + "/poemas" + previousPage.getId() + ".html");
+        String sortOrder = args[i++];
+
+        List<PageCollection> collections = readCollections(dbPath, collectionIds, sortOrder);
+        Map<PageCollection, List<Page>> pagesPerCollection = readCollectionsPages(dbPath, collections, sortOrder);
+        writeIndexPages(pagesPerCollection, indexTemplatePath);
+        for (int cid = 0; cid < collections.size(); cid++) {
+            PageCollection collection = collections.get(cid);
+            List<Page> pages = pagesPerCollection.get(collection);
+            for (int pid = 0; pid < pages.size(); pid++) {
+                Page page = pages.get(pid);
+                File outputRootDir = new File(templatePath).getParentFile();
+                File outputDir = new File(outputRootDir, String.valueOf(collection.getId()));
+                if (!outputDir.exists()) outputDir.mkdirs();
+                File outputFile = new File(outputDir, page.getId() + ".html");
+                Webpage document = readDBFile(dbPath, page);
+                if (pid < pages.size() - 1) {
+                    Page previousPage = pages.get(pid + 1);
+                    document.setPrevPageNumber("/" + collection.getId() + "/" + previousPage.getId() + ".html");
+                } else if (cid < collections.size() - 1) {
+                    PageCollection previousCollection = collections.get(cid + 1);
+                    Page previousPage = pagesPerCollection.get(previousCollection).get(0);
+                    document.setPrevPageNumber("/" + collection.getId() + "/" + previousPage.getId() + ".html");
+                }
+                if (pid > 0) {
+                    Page nextPage = pages.get(pid - 1);
+                    document.setNextPageNumber("/" + collection.getId() + "/" + nextPage.getId() + ".html");
+                } else if (cid > 0) {
+                    PageCollection nextCollection = collections.get(cid - 1);
+                    List<Page> pagesNextCollection = pagesPerCollection.get(nextCollection);
+                    Page nextPage = pagesNextCollection.get(pagesNextCollection.size() - 1);
+                    document.setNextPageNumber("/" + collection.getId() + "/" + nextPage.getId() + ".html");
+                }
+                document.setPageNumber(page.getTitle());
+                writeWebpage(document, templatePath, outputFile.getAbsolutePath());
             }
-            if (id > 0) {
-                WebpageId nextPage = webpageIds.get(id - 1);
-                document.setNextPageNumber("/" + nextPage.getYear() + "/poemas" + nextPage.getId() + ".html");
-            }
-            document.setPageNumber(webpageId.getTitle());
-            File outputRootDir = new File(templatePath).getParentFile();
-            File outputDir = new File(outputRootDir, String.valueOf(webpageId.getYear()));
-            if (!outputDir.exists()) outputDir.mkdirs();
-            File outputFile = new File(outputDir, "poemas" + webpageId.getId() + ".html");
-            writeWebpage(document, templatePath, outputFile.getAbsolutePath());
         }
     }
 
@@ -89,101 +103,178 @@ public class Db2Html {
         return DriverManager.getConnection("jdbc:sqlite:" + dbPath);
     }
 
-    private static List<WebpageId> readWebpageIds(String dbPath) throws SQLException, ClassNotFoundException {
+    private static List<PageCollection> readCollections(String dbPath, String[] collectionIds, String sortOrder) throws SQLException, ClassNotFoundException {
         Connection connection = getDbConnection(dbPath);
-        PreparedStatement statement = connection.prepareStatement("SELECT web, year, month, title FROM webs ORDER BY CAST(web AS INTEGER) DESC, web DESC");
-        List<WebpageId> webpageIds = new ArrayList<WebpageId>();
+        PreparedStatement statement = connection.prepareStatement("SELECT collection_id, title FROM collections WHERE collection_id IN " + buildInClause(collectionIds.length)
+                + " ORDER BY collection_id " + sortOrder);
+        for (int i = 0; i < collectionIds.length; i++) {
+            statement.setString(i + 1, collectionIds[i]);
+        }
+        List<PageCollection> collections = new ArrayList<PageCollection>();
         ResultSet resultSet = statement.executeQuery();
         while (resultSet.next()) {
-            String webpageId = resultSet.getString("web");
-            int year = resultSet.getInt("year");
-            int month = resultSet.getInt("month");
-            String title = resultSet.getString("title");
-            webpageIds.add(new WebpageId(webpageId, year, month, title));
+            String id = resultSet.getString("collection_id");
+            String collectionTitle = resultSet.getString("title");
+            collections.add(new PageCollection(id, collectionTitle));
         }
         resultSet.close();
         connection.close();
-        return webpageIds;
+        return collections;
     }
+
+    private static String buildInClause(int count) {
+        StringBuilder stringBuilder = new StringBuilder("(");
+        for (int i = 0; i < count - 1; i++) {
+            stringBuilder.append("?,");
+        }
+        stringBuilder.append("?)");
+        return stringBuilder.toString();
+    }
+
+    private static Map<PageCollection, List<Page>> readCollectionsPages(String dbPath, List<PageCollection> collections, String sortOrder) throws SQLException, ClassNotFoundException {
+        Map<PageCollection, List<Page>> collectionsPages = new LinkedHashMap<PageCollection, List<Page>>();
+        for (PageCollection collection : collections) {
+            List pages = readPages(dbPath, collection, sortOrder);
+            collectionsPages.put(collection, pages);
+        }
+        return collectionsPages;
+    }
+
+    private static List<Page> readPages(String dbPath, PageCollection collection, String sortOrder) throws SQLException, ClassNotFoundException {
+        Connection connection = getDbConnection(dbPath);
+        PreparedStatement statement = connection.prepareStatement(
+                "SELECT pages.page_id AS page_id, pages.title AS page_title "
+                        + "FROM collection_pages JOIN pages on collection_pages.page_id = pages.page_id "
+                        + "WHERE collection_pages.collection_id = ? "
+                        + "ORDER BY CAST(pages.page_id as INTEGER) " + sortOrder + ", pages.page_id " + sortOrder);
+        statement.setString(1, collection.getId());
+        List<Page> pages = new ArrayList<Page>();
+        ResultSet resultSet = statement.executeQuery();
+        while (resultSet.next()) {
+            String pageId = resultSet.getString("page_id");
+            String title = resultSet.getString("page_title");
+            pages.add(new Page(pageId, title));
+        }
+        resultSet.close();
+        connection.close();
+        return pages;
+    }
+
+    private static List<Poem> readBreverias(String dbPath, String pageId) throws SQLException, ClassNotFoundException {
+        Connection connection = getDbConnection(dbPath);
+        PreparedStatement statement = connection.prepareStatement(
+                "SELECT poem_number, content FROM breverias WHERE poem_number IN "
+                        + "(SELECT poem_id FROM page_poems WHERE poem_type='breveria' AND page_id = ? ) "
+                        + "ORDER BY CAST(poem_number AS INTEGER) ASC");
+        statement.setString(1, pageId);
+        ResultSet resultSet = statement.executeQuery();
+        List<Poem> breverias = new ArrayList<Poem>();
+        while (resultSet.next()) {
+            String poemNumber = resultSet.getString("poem_number");
+            String content = resultSet.getString("content");
+            breverias.add(new Poem(poemNumber, poemNumber, poemNumber, null, content, null, null, null));
+        }
+        resultSet.close();
+        connection.close();
+        return breverias;
+    }
+
+    private static List<Poem> readSonnets(String dbPath, String pageId) throws SQLException, ClassNotFoundException {
+        Connection connection = getDbConnection(dbPath);
+        PreparedStatement statement = connection.prepareStatement(
+                "SELECT poem_number, title, pre_content, content, location, year, month, day FROM sonetos WHERE poem_number IN "
+                        + "(SELECT poem_id FROM page_poems WHERE poem_type='soneto' AND page_id = ? ) "
+                        + "ORDER BY CAST(poem_number AS INTEGER) ASC");
+        statement.setString(1, pageId);
+        ResultSet resultSet = statement.executeQuery();
+        List<Poem> sonetos = new ArrayList<Poem>();
+        while (resultSet.next()) {
+            String poemNumber = resultSet.getString("poem_number");
+            String title = resultSet.getString("title");
+            String preContent = resultSet.getString("pre_content");
+            String content = resultSet.getString("content");
+            int year = resultSet.getInt("year");
+            int month = resultSet.getInt("month");
+            int day = resultSet.getInt("day");
+            String location = resultSet.getString("location");
+            sonetos.add(new Poem(title, Poem.PoemType.SONNET.name(), poemNumber, preContent, content,
+                    formatLocationDate(year, month, day, location), null, null)
+            );
+        }
+        resultSet.close();
+        connection.close();
+        return sonetos;
+    }
+
+    private static List<Poem> readOtherPoems(String dbPath, String pageId) throws SQLException, ClassNotFoundException {
+        Connection connection = getDbConnection(dbPath);
+        PreparedStatement statement = connection.prepareStatement("SELECT title, pre_content, content, location, year, month, day FROM otros_poemas WHERE poem_number IN "
+                + "(SELECT poem_id FROM page_poems WHERE poem_type='otro' AND page_id = ? ) "
+                + "ORDER BY CAST(otros_poemas.year AS INTEGER) ASC, CAST(otros_poemas.month AS INTEGER) ASC, CAST(otros_poemas.day AS INTEGER) ASC");
+        statement.setString(1, pageId);
+        ResultSet resultSet = statement.executeQuery();
+        List<Poem> poemas = new ArrayList<Poem>();
+        while (resultSet.next()) {
+            String title = resultSet.getString("title");
+            String preContent = resultSet.getString("pre_content");
+            String content = resultSet.getString("content");
+            int year = resultSet.getInt("year");
+            int month = resultSet.getInt("month");
+            int day = resultSet.getInt("day");
+            String location = resultSet.getString("location");
+            poemas.add(new Poem(title, Poem.PoemType.OTHER.name(), null, preContent, content,
+                    formatLocationDate(year, month, day, location), null, null)
+            );
+        }
+        resultSet.close();
+        connection.close();
+        return poemas;
+    }
+
     /**
      * Read the DB file and return a Webpage which we can transform into an HTML file.
      */
-    private static Webpage readDBFile(String filePath, WebpageId webpageId) throws SQLException, ClassNotFoundException {
-        Connection connection = getDbConnection(filePath);
-        Webpage webpage = new Webpage("");
-        PreparedStatement statement = connection.prepareStatement("SELECT poem_number, content FROM breverias WHERE web = ? ORDER BY CAST(poem_number AS INTEGER)");
-        statement.setString(1, webpageId.getId());
-        ResultSet resultSet = statement.executeQuery();
-        while (resultSet.next()) {
-            String poemNumber = resultSet.getString("poem_number");
-            String content = resultSet.getString("content");
-            webpage.addBreveria(new Poem(poemNumber, poemNumber, poemNumber, null, content, null, null, null));
+    private static Webpage readDBFile(String dbPath, Page page) throws SQLException, ClassNotFoundException {
+        Webpage webpage = new Webpage(page.getId());
+        List<Poem> breverias = readBreverias(dbPath, page.getId());
+        for (Poem breveria : breverias) {
+            webpage.addBreveria(breveria);
         }
-        resultSet.close();
-        statement.close();
-
-        statement = connection.prepareStatement("SELECT poem_number, title, pre_content, content, location, year, month, day FROM sonetos WHERE web = ? ORDER BY CAST(poem_number AS INTEGER)");
-        statement.setString(1, webpageId.getId());
-        resultSet = statement.executeQuery();
-        while (resultSet.next()) {
-            String poemNumber = resultSet.getString("poem_number");
-            String title = resultSet.getString("title");
-            String preContent = resultSet.getString("pre_content");
-            String content = resultSet.getString("content");
-            int year = resultSet.getInt("year");
-            int month = resultSet.getInt("month");
-            int day = resultSet.getInt("day");
-            String location = resultSet.getString("location");
-            webpage.addSonnet(
-                    new Poem(title, Poem.PoemType.SONNET.name(), poemNumber, preContent, content,
-                            formatLocationDate(year, month, day, location), null, null)
-            );
+        List<Poem> sonnets = readSonnets(dbPath, page.getId());
+        for (Poem sonnet : sonnets) {
+            webpage.addSonnet(sonnet);
         }
-        resultSet.close();
-        statement.close();
-
-        statement = connection.prepareStatement("SELECT title, pre_content, content, location, year, month, day FROM otros_poemas WHERE web = ? ORDER BY year, month, day");
-        statement.setString(1, webpageId.getId());
-        resultSet = statement.executeQuery();
-        while (resultSet.next()) {
-            String title = resultSet.getString("title");
-            String preContent = resultSet.getString("pre_content");
-            String content = resultSet.getString("content");
-            int year = resultSet.getInt("year");
-            int month = resultSet.getInt("month");
-            int day = resultSet.getInt("day");
-            String location = resultSet.getString("location");
-            webpage.addOtherPoem(
-                    new Poem(title, Poem.PoemType.OTHER.name(), null, preContent, content,
-                            formatLocationDate(year, month, day, location), null, null)
-            );
+        List<Poem> otherPoems = readOtherPoems(dbPath, page.getId());
+        for (Poem poem : otherPoems) {
+            webpage.addOtherPoem(poem);
         }
-        resultSet.close();
-        statement.close();
         return webpage;
     }
 
-    private static void writeIndexPages(List<WebpageId> webpageIds, String templatePath) throws IOException, TemplateException {
-        Map<Integer, List<WebpageId>> webpageIdsPerYear = new HashMap<Integer, List<WebpageId>>();
-        for (WebpageId webpageId : webpageIds) {
-            List<WebpageId> pages = webpageIdsPerYear.get(webpageId.getYear());
-            if (pages == null) {
-                pages = new ArrayList<WebpageId>();
-                webpageIdsPerYear.put(webpageId.getYear(), pages);
-            }
-            pages.add(webpageId);
-        }
-        for (int year : webpageIdsPerYear.keySet()) {
-            List<WebpageId> pages = webpageIdsPerYear.get(year);
-            File outputRootDir = new File(templatePath).getParentFile();
-            File outputDir = new File(outputRootDir, String.valueOf(year));
-            File outputFile = new File(outputDir, "index.html");
-            writeIndex(year, pages, templatePath, outputFile.getAbsolutePath());
+    private static void writeIndexPages(Map<PageCollection, List<Page>> collectionsPages, String templatePath) throws IOException, TemplateException {
+        for (PageCollection collection : collectionsPages.keySet()) {
+            writeIndexPage(collection, collectionsPages.get(collection), templatePath);
         }
     }
+
+    private static void writeIndexPage(PageCollection collection, List<Page> pages, String templatePath) throws IOException, TemplateException {
+        File outputRootDir = new File(templatePath).getParentFile();
+        File outputDir = new File(outputRootDir, collection.getId());
+        if (!outputDir.exists()) {
+            outputDir.mkdir();
+        }
+        File outputFile = new File(outputDir, "index.html");
+        System.out.println("Writing " + outputFile);
+        Map<String, Object> root = new HashMap<String, Object>();
+        root.put("pages", pages);
+        root.put("collection", collection);
+        PageCreator.createPage(root, templatePath, outputFile.getAbsolutePath());
+    }
+
     private static String formatLocationDate(int year, int month, int day, String location) {
         return location + ", " + day + " de " + formatDate(year, month);
     }
+
     /**
      * @return the given date formatted in the Spanish locale.
      */
@@ -198,33 +289,13 @@ public class Db2Html {
     }
 
     /**
-     * Create one HTML file for the given Webpage.  
+     * Create one HTML file for the given Webpage.
      */
     private static void writeWebpage(Object webpage, String inputTemplatePath, String outputHTMLPath) throws Throwable {
         System.out.println("Writing " + outputHTMLPath);
         Map<String, Object> root = new HashMap<String, Object>();
         root.put("webpage", webpage);
-        writePage(root, inputTemplatePath, outputHTMLPath);
-    }
-
-    private static void writeIndex(int year, List<WebpageId> webpageIds, String inputTemplatePath, String outputHTMLPath) throws IOException, TemplateException {
-        System.out.println("Writing " + outputHTMLPath);
-        Map<String, Object> root = new HashMap<String, Object>();
-        root.put("webpageIds", webpageIds);
-        root.put("year", year);
-        writePage(root, inputTemplatePath, outputHTMLPath);
-    }
-
-    private static void writePage(Map<String,Object> root, String inputTemplatePath, String outputHTMLPath) throws IOException, TemplateException {
-        Configuration cfg = new Configuration(Configuration.VERSION_2_3_21);
-        cfg.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER);
-        cfg.setObjectWrapper(new DefaultObjectWrapperBuilder(cfg.getIncompatibleImprovements()).build());
-        cfg.setDirectoryForTemplateLoading(new File("."));
-        Template template = cfg.getTemplate(inputTemplatePath);
-        FileWriter writer = new FileWriter(outputHTMLPath);
-        template.process(root, writer);
-        writer.flush();
-        writer.close();
+        PageCreator.createPage(root, inputTemplatePath, outputHTMLPath);
     }
 
 }

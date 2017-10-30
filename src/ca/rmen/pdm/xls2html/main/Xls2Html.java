@@ -209,15 +209,7 @@ public class Xls2Html {
     private static void writeWebpage(Webpage webpage, String inputTemplatePath, String outputHTMLPath) throws Throwable {
         Map<String, Object> root = new HashMap<String, Object>();
         root.put("webpage", webpage);
-        Configuration cfg = new Configuration(Configuration.VERSION_2_3_21);
-        cfg.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER);
-        cfg.setObjectWrapper(new DefaultObjectWrapperBuilder(cfg.getIncompatibleImprovements()).build());
-        cfg.setDirectoryForTemplateLoading(new File("."));
-        Template template = cfg.getTemplate(inputTemplatePath);
-        FileWriter writer = new FileWriter(outputHTMLPath);
-        template.process(root, writer);
-        writer.flush();
-        writer.close();
+        PageCreator.createPage(root, inputTemplatePath, outputHTMLPath);
     }
 
     /**

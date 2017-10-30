@@ -23,33 +23,17 @@ THE SOFTWARE.
 */
 package ca.rmen.pdm.xls2html.model;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-public class WebpageId {
+public class PageCollection {
     private final String id;
-    private final int year;
-    private final int month;
     private final String title;
 
-    public WebpageId(String id, int year, int month, String title) {
+    public PageCollection(String id, String title) {
         this.id = id;
-        this.year = year;
-        this.month = month;
         this.title = title;
     }
 
     public String getId() {
         return id;
-    }
-
-    public int getYear() {
-        return year;
-    }
-
-    public int getMonth() {
-        return month;
     }
 
     public String getTitle() {

@@ -31,7 +31,7 @@ de
     </#if>
 
     <#if webpage.others?has_content>
-    <div class="index-heading">Otros poemas:</div>
+    <div class="index-heading">Poemas:</div>
     <#list webpage.others as poem>
      <a href="#${poem.id}">${poem.title}</a>
     </#list>
@@ -86,7 +86,7 @@ de
     </#list>
     </#if>
     <#if webpage.others?has_content>
-    <h1>Otros</h1>
+    <h1>Poemas</h1>
     <#list webpage.others as poem>
      <#if poem.content??>
       <div class="poem otros">
