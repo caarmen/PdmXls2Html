@@ -52,6 +52,9 @@ de
       <div class="poem-left-border"></div>
       <div class="poem-right-border"></div>
       <div id="${poem.id}" class="poem-title">${poem.poemNumber}</div>
+       <#if poem.preContent?has_content>
+       <div class="poem-pre-content">${poem.preContent}</div>
+       </#if>
       <div class="poem-content">${poem.content}</div>
       <div class="card-right"></div>
       <#if poem_has_next>
@@ -72,6 +75,9 @@ de
       <div class="poem-left-border"></div>
       <div class="poem-right-border"></div>
       <div id="${poem.id}" class="poem-title">${poem.poemNumber} - ${poem.title}</div>
+       <#if poem.preContent?has_content>
+       <div class="poem-pre-content">${poem.preContent}</div>
+       </#if>
       <div class="poem-content">${poem.content}</div>
       <div class="poem-date">${poem.locationDate}</div>
       <div class="link-to-index"><a href="#index">Índice</a></div>
@@ -95,6 +101,9 @@ de
        <div class="poem-left-border"></div>
        <div class="poem-right-border"></div>
        <div id="${poem.id}" class="poem-title">${poem.title}</div>
+       <#if poem.preContent?has_content>
+       <div class="poem-pre-content">${poem.preContent}</div>
+       </#if>
        <div class="poem-content">${poem.content}</div>
        <div class="poem-date">${poem.locationDate}</div>
        <div class="link-to-index"><a href="#index">Índice</a></div>
