@@ -92,7 +92,7 @@ public class Db2Html {
                     }
                 }
                 document.setPageNumber(page.getTitle());
-                writeWebpage(document, templatePath, outputFile.getAbsolutePath());
+                writeWebpage(collection, document, templatePath, outputFile.getAbsolutePath());
             }
         }
     }
@@ -325,10 +325,11 @@ public class Db2Html {
     /**
      * Create one HTML file for the given Webpage.
      */
-    private static void writeWebpage(Object webpage, String inputTemplatePath, String outputHTMLPath) throws Throwable {
+    private static void writeWebpage(PageCollection collection, Webpage webpage, String inputTemplatePath, String outputHTMLPath) throws Throwable {
         System.out.println("Writing " + outputHTMLPath);
         Map<String, Object> root = new HashMap<String, Object>();
         root.put("webpage", webpage);
+        root.put("collection", collection);
         PageCreator.createPage(root, inputTemplatePath, outputHTMLPath);
     }
 

@@ -3,7 +3,7 @@
  <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=610px">
-  <link rel="stylesheet" type="text/css" href="sonetos_de_marzo.css">
+  <link rel="stylesheet" type="text/css" href="/palida_muerte/palida_muerte.css">
   <title>${webpage.pageNumber}</title>
  </head>
  <body style="background-image: url(/background.png)">
@@ -15,8 +15,23 @@
 de
    </div>
    <div class="author">Francisco Álvarez Hidalgo</div>
-   <div class="title light-text">Sonetos de Marzo</div>
+   <div class="title light-text"><a href="/palida_muerte/index.html">Pálida Muerte</a> - <a href="/palida_muerte/${collection.id}/portal.html">${collection.title}</a></div>
    <div class="poems">
+    <#list webpage.breverias as poem>
+     <div class="poem breveria">
+      <div class="card-top"></div>
+      <div class="card-left"></div>
+      <div class="poem-left-border"></div>
+      <div class="poem-right-border"></div>
+      <div id="${poem.id}" class="poem-title">Brevería ${poem.poemNumber}</div>
+       <#if poem.preContent?has_content>
+       <div class="poem-pre-content">${poem.preContent}</div>
+       </#if>
+      <div class="poem-content">${poem.content}</div>
+      <div class="card-right"></div>
+      <div class="card-bottom"></div>
+     </div>
+    </#list>
     <#list webpage.sonnets as poem>
      <div class="poem soneto">
       <div class="card-top"></div>
@@ -33,10 +48,26 @@ de
       <div class="card-bottom"></div>
      </div>
     </#list>
+    <#list webpage.others as poem>
+     <div class="poem otros">
+      <div class="card-top"></div>
+      <div class="card-left"></div>
+      <div class="poem-left-border"></div>
+      <div class="poem-right-border"></div>
+      <div id="${poem.id}" class="poem-title">${poem.title}</div>
+       <#if poem.preContent?has_content>
+       <div class="poem-pre-content">${poem.preContent}</div>
+       </#if>
+      <div class="poem-content">${poem.content}</div>
+      <div class="poem-date">${poem.locationDate}</div>
+      <div class="card-right"></div>
+      <div class="card-bottom"></div>
+     </div>
+    </#list>
    </div>
    <div class="nav">
     <#if webpage.prevPageNumber?has_content>
-    <a href="${webpage.prevPageNumber}"><span class="nav-prev">&larr;&nbsp;Anterior</span></a>
+    <a href="/palida_muerte${webpage.prevPageNumber}"><span class="nav-prev">&larr;&nbsp;Anterior</span></a>
     </#if>
     <div class="nav-index dropdown">Índice
         <div class="dropdown-content">
@@ -44,7 +75,7 @@ de
         </div>
     </div>
     <#if webpage.nextPageNumber?has_content>
-    <a href="${webpage.nextPageNumber}"><span class="nav-next">Siguiente&nbsp;&rarr;</span></a>
+    <a href="/palida_muerte${webpage.nextPageNumber}"><span class="nav-next">Siguiente&nbsp;&rarr;</span></a>
     </#if>
    </div>
    <div class="fineprint">

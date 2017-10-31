@@ -20,7 +20,7 @@
             <table class="portal-table">
                 <tr>
                 <#list pages as page>
-                    <td class="portal-entry"><a href="/${collection.id}/${page.id}.html">${page.title}</a></td>
+                    <td class="portal-entry"><a href="/mensuales/${collection.id}/${page.id}.html">${page.title}</a></td>
                     <#if page_index % 3 == 2 && page_has_next>
                 </tr>
                 <tr>

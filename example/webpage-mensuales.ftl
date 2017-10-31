@@ -121,15 +121,15 @@ de
    </div>
    <div class="nav">
     <#if webpage.prevPageNumber?has_content>
-    <a href="${webpage.prevPageNumber}"><span class="nav-prev">&larr;&nbsp;Anterior</span></a>
+    <a href="/mensuales${webpage.prevPageNumber}"><span class="nav-prev">&larr;&nbsp;Anterior</span></a>
     </#if>
     <#if webpage.nextPageNumber?has_content>
-    <a href="${webpage.nextPageNumber}"><span class="nav-next">Siguiente&nbsp;&rarr;</span></a>
+    <a href="/mensuales${webpage.nextPageNumber}"><span class="nav-next">Siguiente&nbsp;&rarr;</span></a>
     </#if>
    </div>
    <div class="fineprint">
    Diseño: Carmen Álvarez<br>
-   Poemas &copy; Francisco Álvarez Hidalgo, Familia Álvarez, 1997-2014. <a href="/enlacesindice.html#derechos">Todos derechos reservados.</a>
+   Poemas &copy; Francisco Álvarez Hidalgo, Familia Álvarez, 1997-2014. <a href="/derechos.html">Todos derechos reservados.</a>
    </div>
   </div>
  </body>
