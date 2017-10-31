@@ -1,5 +1,5 @@
-<!DOCTYPE html public "-//W3C//DTD HTML 4.0//EN">
-<html>
+<!DOCTYPE html>
+<html lang="es">
  <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=610px">
@@ -38,7 +38,7 @@ de
     </#if>
    </div>
    <div class="poem-divider">
-    <img src= "/mensuales/divider.png">
+    <img src= "/mensuales/divider.png" alt="seperador">
    </div>
    <div class="poems">
     <#if webpage.breverias?has_content>
@@ -86,7 +86,7 @@ de
      </div>
      <#if poem_has_next>
      <div class="poem-divider">
-      <img src= "/mensuales/divider.png">
+      <img src= "/mensuales/divider.png" alt="seperador">
      </div>
      </#if>
     </#list>
@@ -112,7 +112,7 @@ de
       </div>
       <#if poem_has_next>
       <div class="poem-divider">
-       <img src= "/mensuales/divider.png">
+       <img src= "/mensuales/divider.png" alt="seperador">
       </div>
       </#if>
      </#if>

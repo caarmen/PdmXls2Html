@@ -1,11 +1,9 @@
-<!DOCTYPE html public "-//W3C//DTD HTML 4.0//EN">
-<html>
+<!DOCTYPE html>
+<html lang="es">
  <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=610px">
-  <link rel="stylesheet" type="text/css" href="/common.css">
   <link rel="stylesheet" type="text/css" href="sonetos_de_marzo.css">
-  <link rel="stylesheet" type="text/css" href="dropdown.css">
   <title>${webpage.pageNumber}</title>
  </head>
  <body style="background-image: url(/background.png)">
@@ -40,11 +38,11 @@ de
     <#if webpage.prevPageNumber?has_content>
     <a href="${webpage.prevPageNumber}"><span class="nav-prev">&larr;&nbsp;Anterior</span></a>
     </#if>
-    <span class="nav-index dropdown">Índice
+    <div class="nav-index dropdown">Índice
         <div class="dropdown-content">
             <!--#include virtual="index.html"-->
         </div>
-    </span>
+    </div>
     <#if webpage.nextPageNumber?has_content>
     <a href="${webpage.nextPageNumber}"><span class="nav-next">Siguiente&nbsp;&rarr;</span></a>
     </#if>
