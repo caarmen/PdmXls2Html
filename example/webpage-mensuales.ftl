@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=610px">
   <link rel="stylesheet" type="text/css" href="/common.css">
-  <link rel="stylesheet" type="text/css" href="/mensuales/common.css">
+  <link rel="stylesheet" type="text/css" href="/mensuales/mensuales.css">
   <title>${webpage.pageNumber}</title>
  </head>
  <body style="background-image: url(/background.png)">

@@ -124,7 +124,7 @@ public class Db2Html {
             PageCollection nextCollection = collections.get(collectionIndex + 1);
             List<Page> pagesInNextCollection = pagesPerCollection.get(nextCollection);
             Page nextPage = pagesInNextCollection.get(0);
-            return "/" + currentCollection.getId()+ "/" + nextPage.getId() + ".html";
+            return "/" + nextCollection.getId()+ "/" + nextPage.getId() + ".html";
         }
         return null; // This is the last page
     }
@@ -213,11 +213,11 @@ public class Db2Html {
     private static List<Poem> readSonnets(String dbPath, String pageId) throws SQLException, ClassNotFoundException {
         Connection connection = getDbConnection(dbPath);
         PreparedStatement statement = connection.prepareStatement(
-                "SELECT poem_number, title, pre_content, content, location, year, month, day FROM sonetos WHERE poem_number IN "
+                "SELECT poem_number, CAST(poem_number AS INTEGER) as poem_number_int, title, pre_content, content, location, year, month, day FROM sonetos WHERE poem_number IN "
                         + "(SELECT poem_id FROM page_poems WHERE poem_type='soneto' AND page_id = ? ) "
-                        + " UNION SELECT poem_number, title, pre_content, content, location, year, month, day FROM luminarias_mitos WHERE poem_number IN "
+                        + " UNION SELECT poem_number, CAST(poem_number AS INTEGER) as poem_number_int, title, pre_content, content, location, year, month, day FROM luminarias_mitos WHERE poem_number IN "
                         + "(SELECT poem_id FROM page_poems WHERE poem_type='LM' AND page_id = ? ) "
-                        + "ORDER BY poem_number ASC");
+                        + "ORDER BY poem_number_int ASC, poem_number ASC");
         statement.setString(1, pageId);
         statement.setString(2, pageId);
         ResultSet resultSet = statement.executeQuery();
