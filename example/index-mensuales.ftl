@@ -9,11 +9,12 @@
 </head>
 <body style="background-image: url(/background.png)">
 <!--#include virtual="/header.html"-->
-<div>
+<div class="root">
     <!--#include virtual="/sidebar.html"-->
     <div class="content">
         <div class="left-border"></div>
         <div class="right-border"></div>
+        <div class="top-border"></div>
         <div class="content-text">
             <div class="logo logo-small">${collection.title}</div>
             <table class="portal-table">
@@ -28,6 +29,7 @@
                 </tr>
             </table>
         </div>
+        <div class="bottom-border"></div>
     </div>
 </div>
 </body>
