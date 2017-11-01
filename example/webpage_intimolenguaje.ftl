@@ -80,7 +80,7 @@ de
    </div>
    <div class="fineprint">
    Diseño: Carmen Álvarez<br>
-   Poemas &copy; Francisco Álvarez Hidalgo, Familia Álvarez, 1997-2014. <a href="/enlacesindice.html#derechos">Todos derechos reservados.</a>
+   Poemas &copy; Francisco Álvarez Hidalgo, Familia Álvarez, 1997-2014. <a href="/derechos.html">Todos derechos reservados.</a>
    </div>
   </div>
  </body>
