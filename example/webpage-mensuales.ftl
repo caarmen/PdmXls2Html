@@ -127,10 +127,7 @@ de
     <a href="/mensuales${webpage.nextPageNumber}"><span class="nav-next">Siguiente&nbsp;&rarr;</span></a>
     </#if>
    </div>
-   <div class="fineprint">
-   Diseño: Carmen Álvarez<br>
-   Poemas &copy; Francisco Álvarez Hidalgo, Familia Álvarez, 1997-2014. <a href="/derechos.html">Todos derechos reservados.</a>
-   </div>
+   <!--#include virtual="/copyright-footer.html"-->
   </div>
  </body>
 </html>
